@@ -46,7 +46,8 @@ def build(bld):
   obj.target = 'zutil_bindings'
   obj.source = './src/zone.cc ./src/zonecfg.cc ./src/zutil_bindings.cc'
   obj.name = "node-zutil"
-  obj.lib = ["zonecfg", "pthread"]
+  obj.lib = ["pthread"]
+  if os.uname()[0] == 'SunOS': obj.lib.append("zonecfg")
 
 def test(ctx):
   system('nodeunit ./tst')
