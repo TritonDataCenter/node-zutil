@@ -32,6 +32,7 @@ def configure(conf):
 
   conf.env.append_value('CXXFLAGS', ['-D_FILE_OFFSET_BITS=64',
                                      '-D_LARGEFILE_SOURCE',
+																		 '-D' + os.uname()[0],
                                      '-Wall',
                                      '-fPIC',
                                      '-Werror'])

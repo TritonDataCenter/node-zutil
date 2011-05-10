@@ -2,8 +2,6 @@
 #ifndef ZONE_CFG_H_
 #define ZONE_CFG_H_
 
-#include <libzonecfg.h>
-
 class ZoneCfg {
  public:
   virtual ~ZoneCfg();

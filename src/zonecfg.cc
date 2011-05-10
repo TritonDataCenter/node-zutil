@@ -1,10 +1,12 @@
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 #include <errno.h>
+#ifdef SunOS
 #include <libzonecfg.h>
+#include <zone.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
-#include <zone.h>
 
 #include <node.h>
 #include <v8.h>
@@ -15,6 +17,7 @@
 #include "zutil_common.h"
 #include "zonecfg.h"
 
+#ifdef SunOS
 typedef struct zone_attrtab zone_attrtab_t;
 
 
@@ -235,11 +238,13 @@ v8::Handle<v8::Value> ZoneCfg::GetZoneAttributes(const v8::Arguments &args) {
 
   return v8::Undefined();
 }
-
+#endif
 
 void ZoneCfg::Initialize(v8::Handle<v8::Object> target) {
   v8::HandleScope scope;
 
+#ifdef SunOS
   NODE_SET_METHOD(target, "getZoneAttribute", GetZoneAttribute);
   NODE_SET_METHOD(target, "getZoneAttributes", GetZoneAttributes);
+#endif
 }
