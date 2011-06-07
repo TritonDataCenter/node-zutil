@@ -10,6 +10,7 @@ class ZoneCfg {
 
   static v8::Handle<v8::Value> GetZoneAttribute(const v8::Arguments &args);
   static v8::Handle<v8::Value> GetZoneAttributes(const v8::Arguments &args);
+  static v8::Handle<v8::Value> GetZoneState(const v8::Arguments &args);
 
  protected:
   ZoneCfg();
