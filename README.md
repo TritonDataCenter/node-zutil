@@ -13,8 +13,9 @@ plus zone_list (which brings us to a whopping total of 4 APIs).
     var zutil = require('zutil');
 
     var myZone = zutil.getZone();
-    var someOtherZone = zutil.getZoneByName('foo);
+    var someOtherZone = zutil.getZoneByName('foo');
     var yetAnotherZone = zutil.getZoneById(20);
+    var state = zutil.getZoneState('foo');
     var allZones = zutil.listZones();
 
     zutil.getZoneAttributes(someOtherZone.name, function(error, attrs) {
