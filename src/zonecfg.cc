@@ -238,6 +238,23 @@ v8::Handle<v8::Value> ZoneCfg::GetZoneAttributes(const v8::Arguments &args) {
 
   return v8::Undefined();
 }
+
+v8::Handle<v8::Value> ZoneCfg::GetZoneState(const v8::Arguments &args) {
+  v8::HandleScope scope;
+
+  REQUIRE_STRING_ARG(args, 0, name);
+
+  zone_state_t state;
+  char *statestr = NULL;
+
+  if (int ret = zone_get_state(*name, &state)) {
+    RETURN_EXCEPTION(zonecfg_strerror(ret));
+  }
+  statestr = zone_state_str(state);
+
+  return v8::String::New(statestr);
+}
+
 #endif
 
 void ZoneCfg::Initialize(v8::Handle<v8::Object> target) {
@@ -246,5 +263,6 @@ void ZoneCfg::Initialize(v8::Handle<v8::Object> target) {
 #ifdef SunOS
   NODE_SET_METHOD(target, "getZoneAttribute", GetZoneAttribute);
   NODE_SET_METHOD(target, "getZoneAttributes", GetZoneAttributes);
+  NODE_SET_METHOD(target, "getZoneState", GetZoneState);
 #endif
 }

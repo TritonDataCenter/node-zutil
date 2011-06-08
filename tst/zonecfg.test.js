@@ -79,6 +79,22 @@ module.exports = testCase({
         test.done();
       });
     });
-  }
+  },
 
+  getZoneState: function (test) {
+    test.expect(1);
+    var state = zutil.getZoneState('global');
+    test.equal(state, 'running');
+    test.done();
+  },
+
+  getBadZoneState: function (test) {
+    test.expect(1);
+
+    var state;
+    test.throws(function() {
+      zutil.getZoneState('the-twilight-zone');
+    });
+    test.done();
+  }
 });
