@@ -79,7 +79,7 @@ struct eio_attr_baton_t {
   eio_attr_baton_t &operator=(const eio_attr_baton_t &);
 };
 
-int ZoneCfg::EIO_GetZoneAttrs(eio_req *req) {
+void ZoneCfg::EIO_GetZoneAttrs(eio_req *req) {
   eio_attr_baton_t *baton = static_cast<eio_attr_baton_t *>(req->data);
   int rc = 0;
 
@@ -138,7 +138,6 @@ int ZoneCfg::EIO_GetZoneAttrs(eio_req *req) {
     zonecfg_endattrent(handle);
     zonecfg_fini_handle(handle);
   }
-  return 0;
 }
 
 int ZoneCfg::EIO_AfterGetZoneAttrs(eio_req *req) {
