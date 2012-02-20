@@ -4,8 +4,8 @@ var uuid = require('node-uuid');
 var zutil = require('../lib/zutil');
 
 // Change these to your zone to run this
-var _zoneName = '453ec030-c996-4ef0-8e36-dca08ee46928';
-var _zoneAttr = 'property-version';
+var _zoneName = '6ceeeab9-a721-4b57-a388-dbbeaab5b53e';
+var _zoneAttr = 'owner-uuid';
 
 module.exports = testCase({
 
