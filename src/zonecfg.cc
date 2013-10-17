@@ -1,10 +1,8 @@
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 #include <errno.h>
-#ifdef SunOS
 #include <libzonecfg.h>
 #include <zone.h>
-#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -17,20 +15,19 @@
 #include "zutil_common.h"
 #include "zonecfg.h"
 
-#ifdef SunOS
 typedef struct zone_attrtab zone_attrtab_t;
 
 
 // Start Node Specific things
-struct eio_attr_baton_t {
-  eio_attr_baton_t(): _attrs(0),
+struct uv_attr_baton_t {
+  uv_attr_baton_t(): _attrs(0),
                       _errno(-1),
                       _api(NULL),
                       _err_msg(NULL),
                       _zone(NULL),
                       _attr(NULL) {}
 
-  virtual ~eio_attr_baton_t() {
+  virtual ~uv_attr_baton_t() {
     std::vector<zone_attrtab_t *>::iterator it;
     for (it = _attrs.begin(); it < _attrs.end(); it++) {
       if (*it) {
@@ -75,12 +72,13 @@ struct eio_attr_baton_t {
   v8::Persistent<v8::Function> _callback;
 
  private:
-  eio_attr_baton_t(const eio_attr_baton_t &);
-  eio_attr_baton_t &operator=(const eio_attr_baton_t &);
+  uv_attr_baton_t(const uv_attr_baton_t &);
+  uv_attr_baton_t &operator=(const uv_attr_baton_t &);
 };
 
-void ZoneCfg::EIO_GetZoneAttrs(eio_req *req) {
-  eio_attr_baton_t *baton = static_cast<eio_attr_baton_t *>(req->data);
+
+void ZoneCfg::UV_GetZoneAttrs(uv_work_t *req) {
+  uv_attr_baton_t *baton = static_cast<uv_attr_baton_t *>(req->data);
   int rc = 0;
 
   zone_attrtab_t *attrtab = NULL;
@@ -140,11 +138,11 @@ void ZoneCfg::EIO_GetZoneAttrs(eio_req *req) {
   }
 }
 
-int ZoneCfg::EIO_AfterGetZoneAttrs(eio_req *req) {
+
+void ZoneCfg::UV_AfterGetZoneAttrs(uv_work_t *req, int status) {
   v8::HandleScope scope;
 
-  eio_attr_baton_t *baton = static_cast<eio_attr_baton_t *>(req->data);
-  ev_unref(EV_DEFAULT_UC);
+  uv_attr_baton_t *baton = static_cast<uv_attr_baton_t *>(req->data);
 
   int argc = 1;
   v8::Local<v8::Value> argv[2];
@@ -188,8 +186,9 @@ int ZoneCfg::EIO_AfterGetZoneAttrs(eio_req *req) {
   }
 
   delete baton;
-  return 0;
+  delete req;
 }
+
 
 v8::Handle<v8::Value> ZoneCfg::GetZoneAttribute(const v8::Arguments &args) {
   v8::HandleScope scope;
@@ -198,7 +197,7 @@ v8::Handle<v8::Value> ZoneCfg::GetZoneAttribute(const v8::Arguments &args) {
   REQUIRE_STRING_ARG(args, 1, attr);
   REQUIRE_FUNCTION_ARG(args, 2, callback);
 
-  eio_attr_baton_t *baton = new eio_attr_baton_t();
+  uv_attr_baton_t *baton = new uv_attr_baton_t();
   baton->_zone = strdup(*zone);
   if (!baton->_zone) {
     delete baton;
@@ -210,13 +209,17 @@ v8::Handle<v8::Value> ZoneCfg::GetZoneAttribute(const v8::Arguments &args) {
     RETURN_OOM_EXCEPTION();
   }
 
+  uv_work_t *req = new uv_work_t;
+  req->data = baton;
+
   baton->_callback = v8::Persistent<v8::Function>::New(callback);
 
-  eio_custom(EIO_GetZoneAttrs, EIO_PRI_DEFAULT, EIO_AfterGetZoneAttrs, baton);
-  ev_ref(EV_DEFAULT_UC);
+  uv_queue_work(uv_default_loop(), req, UV_GetZoneAttrs,
+    UV_AfterGetZoneAttrs);
 
   return v8::Undefined();
 }
+
 
 v8::Handle<v8::Value> ZoneCfg::GetZoneAttributes(const v8::Arguments &args) {
   v8::HandleScope scope;
@@ -224,19 +227,23 @@ v8::Handle<v8::Value> ZoneCfg::GetZoneAttributes(const v8::Arguments &args) {
   REQUIRE_STRING_ARG(args, 0, zone);
   REQUIRE_FUNCTION_ARG(args, 1, callback);
 
-  eio_attr_baton_t *baton = new eio_attr_baton_t();
+  uv_attr_baton_t *baton = new uv_attr_baton_t();
   baton->_zone = strdup(*zone);
   if (!baton->_zone) {
     delete baton;
     RETURN_OOM_EXCEPTION();
   }
+  uv_work_t *req = new uv_work_t;
+  req->data = baton;
+
   baton->_callback = v8::Persistent<v8::Function>::New(callback);
 
-  eio_custom(EIO_GetZoneAttrs, EIO_PRI_DEFAULT, EIO_AfterGetZoneAttrs, baton);
-  ev_ref(EV_DEFAULT_UC);
+  uv_queue_work(uv_default_loop(), req, UV_GetZoneAttrs,
+    UV_AfterGetZoneAttrs);
 
   return v8::Undefined();
 }
+
 
 v8::Handle<v8::Value> ZoneCfg::GetZoneState(const v8::Arguments &args) {
   v8::HandleScope scope;
@@ -254,14 +261,10 @@ v8::Handle<v8::Value> ZoneCfg::GetZoneState(const v8::Arguments &args) {
   return v8::String::New(statestr);
 }
 
-#endif
-
 void ZoneCfg::Initialize(v8::Handle<v8::Object> target) {
   v8::HandleScope scope;
 
-#ifdef SunOS
   NODE_SET_METHOD(target, "getZoneAttribute", GetZoneAttribute);
   NODE_SET_METHOD(target, "getZoneAttributes", GetZoneAttributes);
   NODE_SET_METHOD(target, "getZoneState", GetZoneState);
-#endif
 }
