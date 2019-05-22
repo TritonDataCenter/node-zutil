@@ -3,9 +3,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef SunOS
 #include <zone.h>
-#endif
 
 #include <node.h>
 #include <v8.h>
@@ -16,7 +14,6 @@
 #include "zutil_common.h"
 #include "zone.h"
 
-#ifdef SunOS
 
 static v8::Handle<v8::Value> _v8Zone(zoneid_t id, const char *name) {
   v8::Local<v8::Object> zone = v8::Object::New();
@@ -111,14 +108,11 @@ v8::Handle<v8::Value> Zone::ListZones(const v8::Arguments &args) {
 
   return zones;
 }
-#endif
 
 void Zone::Initialize(v8::Handle<v8::Object> target) {
   v8::HandleScope scope;
-#ifdef SunOS
   NODE_SET_METHOD(target, "getZone", GetZone);
   NODE_SET_METHOD(target, "getZoneById", GetZoneById);
   NODE_SET_METHOD(target, "getZoneByName", GetZoneByName);
   NODE_SET_METHOD(target, "listZones", ListZones);
-#endif
 }

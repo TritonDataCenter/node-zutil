@@ -13,3 +13,5 @@ extern "C" {
     ZoneCfg::Initialize(target);
   }
 }
+
+NODE_MODULE(zutil_bindings, init)

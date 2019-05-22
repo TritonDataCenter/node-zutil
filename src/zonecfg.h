@@ -14,8 +14,8 @@ class ZoneCfg {
 
  protected:
   ZoneCfg();
-  static void  EIO_GetZoneAttrs(eio_req *req);
-  static int EIO_AfterGetZoneAttrs(eio_req *req);
+  static void UV_GetZoneAttrs(uv_work_t *req);
+  static void UV_AfterGetZoneAttrs(uv_work_t *req, int);
 
  private:
   ZoneCfg(const ZoneCfg &);
