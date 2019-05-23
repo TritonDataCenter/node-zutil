@@ -1,50 +1,58 @@
-node-zutil is a small library specific to Sun Solaris (and derived OS's like
-illumos) that provides a wrapper over some APIs in zone.h and libzonecfg.h.
+node-zutil is a small library specific to SunOS/Solaris/Illumos/SmartOS
+that provides a wrapper over all three APIs in
+[zone.h](https://github.com/joyent/illumos-joyent/blob/master/usr/src/head/zone.h)
+and *one* from
+[libzonecfg.h](https://github.com/joyent/illumos-joyent/blob/master/usr/src/head/libzonecfg.h).
 
-The libzonecfg API is in fact rather overwhelming, and for now I only needed
-the ability to read attributes, so that's all that's in here. Over time I
-expect that list will grow.
+"libzonecfg" is not documented in illumos and hence (IIUC) considered "unstable".
+That's a significant reason why bindings for more of its API is not provided
+here. See API-specific notes in the reference section below.
 
-The wrappers over zone.h are pretty much all the publicly supported ones
-plus zone_list (which brings us to a whopping total of 4 APIs).
+Version 2 of this lib is a significant departure from earlier versions. See
+[the changelog entry](./CHANGES.md#v200).
 
-## Usage
+
+# Usage
 
     var zutil = require('zutil');
 
+    // zone.h
+    // XXX
     var myZone = zutil.getZone();
     var someOtherZone = zutil.getZoneByName('foo');
     var yetAnotherZone = zutil.getZoneById(20);
-    var state = zutil.getZoneState('foo');
-    var allZones = zutil.listZones();
 
-    zutil.getZoneAttributes(someOtherZone.name, function(error, attrs) {
-      for (var i = 0; i < attrs.length; i++) {
-        console.log('NAME: ' + attrs[i].name);
-	console.log('TYPE: ' + attrs[i].type);
-	console.log('VALUE: ' + attrs[i].value);
-      }
-    });
-    zutil.getZoneAttribute(someOtherZone.name, 'bar', function(error, attr) {
-      console.log('NAME: ' + attr.name);
-      console.log('TYPE: ' + attr.type);
-      console.log('VALUE: ' + attr.value);
-    });
+    // libzonecfg.h
+    var state = zutil.getzonestate('foo'); // => "running"
 
-There you go.  That's the whole API for now.
 
-## Installation
+# Install
 
     npm install zutil
 
-(You can also install it by doing `node-waf configure build` and then
-linking or copying the folder into your project's `node_modules`
-directory.)
 
-## License
+# Reference
+
+## `getzonestate(zonename)`
+
+XXX
+
+
+# Development
+
+    npm install
+
+Note: If you are running as root you will see this warning
+(see [npm/npm#3497](https://github.com/npm/npm/issues/3497)):
+
+    npm WARN lifecycle zonecfg@1.0.0~install: cannot run in wd zonecfg@1.0.0 node-gyp rebuild (wd=...)
+
+You then need to use:
+
+    npm install --unsafe-perm
+
+
+
+# License
 
 MIT.
-
-## Bugs
-
-See <https://github.com/mcavage/node-zutil/issues>.

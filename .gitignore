@@ -1,4 +1,7 @@
-build
-.lock-wscript
-*.log
-node_modules
+/tmp
+/build
+/npm-debug.log
+/node_modules
+/zutil-*.tgz
+.DS_Store
+/test.tap
