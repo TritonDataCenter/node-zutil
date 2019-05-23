@@ -25,6 +25,13 @@ Version 2 of this lib is a significant departure from earlier versions. See
     // libzonecfg.h
     var state = zutil.getzonestate('foo'); // => "running"
 
+    > var zutil = require('zutil')
+
+    > zutil.getzonestate('5d4f7599-a991-6b35-dd44-d91936957a6b')
+    'running'
+
+
+Assuming "5d4f7599-a991-6b35-dd44-d91936957a6b" is your current zone. If you are 
 
 # Install
 
@@ -35,8 +42,38 @@ Version 2 of this lib is a significant departure from earlier versions. See
 
 ## `getzonestate(zonename)`
 
-XXX
+Gets the zone state string (e.g. "running", "configured") for the given
+`zonename` string.  Throws an `Error` on any failure.
 
+Parameters:
+
+- `zonename` - String zone name. Typically on SmartOS this is 'global' or a
+  UUID.
+
+At the time of writing the possible zone state strings in illumos are the
+[`ZONE_STATE_STR_...` vars defined
+here](https://github.com/joyent/illumos-joyent/blob/ab6a47af7ee9daefa937f7e8ca0531e68d003686/usr/src/lib/libzonecfg/common/zonecfg_impl.h#L48-L55)
+plus `"unknown"`.
+
+If you are in a non-global zone, you may only get a successful result for the
+current zone. Other zones will appear to not exist.
+
+Examples:
+
+```
+> zutil.getzonestate('5d4f7599-a991-6b35-dd44-d91936957a6b')
+'running'
+
+> zutil.getzonestate('global')
+Error: could not get zone "global" state: No such zone configured
+    at Error (native)
+    ...
+
+> zutil.getzonestate('nosuchzone')
+Error: could not get zone "nosuchzone" state: No such zone configured
+    at Error (native)
+    ...
+```
 
 # Development
 

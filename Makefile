@@ -30,7 +30,7 @@ all $(TAP_EXEC):
 
 .PHONY: clean
 clean:
-    rm -rf build node_modules npm-debug.log zonecfg-*.tgz test.tap
+	rm -rf build node_modules npm-debug.log zonecfg-*.tgz test.tap
 
 .PHONY: test
 test: | $(TAP_EXEC)

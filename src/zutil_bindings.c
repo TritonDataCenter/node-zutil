@@ -71,15 +71,14 @@ napi_value zu_getzonestate(napi_env env, napi_callback_info info) {
 
 
 static napi_value Init(napi_env env, napi_value exports) {
+    // - https://nodejs.org/api/n-api.html#n_api_napi_property_descriptor
+    //   for fields descriptions.
+    // - `0b010` is `napi_property_attributes` for enumerable, read-only.
+    //   https://nodejs.org/api/n-api.html#n_api_napi_property_attributes
     napi_property_descriptor properties[] = {
-        // Dev Notes:
-        // - https://nodejs.org/api/n-api.html#n_api_napi_property_descriptor
-        //   for fields descriptions.
-        // - `0b010` is `napi_property_attributes` for enumerable, read-only.
-        //   https://nodejs.org/api/n-api.html#n_api_napi_property_attributes
 
         // libzonecfg.h
-        { "getzonestate", NULL, zu_zone_get_state_str, NULL, NULL, NULL, 0b010, NULL },
+        { "getzonestate", NULL, zu_getzonestate, NULL, NULL, NULL, 0b010, NULL },
     };
 
     NAPI_CALL(env, napi_define_properties(
