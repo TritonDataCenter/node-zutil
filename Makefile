@@ -41,6 +41,8 @@ test: | $(TAP_EXEC)
 play:
 	echo ""
 	-node -e "console.log(require('./').getzonestate('$(shell zonename)'))"
+	echo ""
+	-node -e "console.log(require('./').getzoneid('$(shell zonename)'))"
 
 check:: check-version
 

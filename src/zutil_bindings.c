@@ -37,6 +37,24 @@ napi_status _zu_napi_throw_error(napi_env env, const char* code, char *msg_forma
 
 
 
+napi_value zu_getzoneid(napi_env env, napi_callback_info info) {
+    size_t argc = 0;
+    zone_id_t id;
+    napi_value js_id;
+
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, NULL, NULL, NULL));
+    if (argc != 0) {
+        napi_throw_type_error(env, NULL, "incorrect number of arguments");
+        return NULL;
+    }
+
+    id = getzoneid();
+
+    NAPI_CALL(env, napi_create_int64(env, id, &js_id));
+    return js_id;
+}
+
+
 napi_value zu_getzonestate(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value argv[1];
@@ -76,6 +94,8 @@ static napi_value Init(napi_env env, napi_value exports) {
     // - `0b010` is `napi_property_attributes` for enumerable, read-only.
     //   https://nodejs.org/api/n-api.html#n_api_napi_property_attributes
     napi_property_descriptor properties[] = {
+        // zone.h
+        { "getzoneid", NULL, zu_getzoneid, NULL, NULL, NULL, 0b010, NULL },
 
         // libzonecfg.h
         { "getzonestate", NULL, zu_getzonestate, NULL, NULL, NULL, 0b010, NULL },
