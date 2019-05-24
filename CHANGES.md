@@ -22,9 +22,7 @@
     - Renames all the other APIs. The new names match the name of the C
       functions, where those exist.
 
-    A migration guide is next.
-
-  Migrating from zutil 0.x and 1.x:
+  Migrating from zutil 0.x and 1.x to 2.x:
 
     | old API                                                      | new API |
     | -------------------------------------------------------------| ------- |

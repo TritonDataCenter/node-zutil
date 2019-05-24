@@ -9,7 +9,7 @@ That's a significant reason why bindings for more of its API is not provided
 here.
 
 Version 2 of this lib is a significant departure from earlier versions. See
-[the changelog entry](./CHANGES.md#v200).
+[the changelog entry](./CHANGES.md#200).
 
 
 # Usage
