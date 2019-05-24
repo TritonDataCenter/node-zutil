@@ -42,7 +42,7 @@ play:
 	echo ""
 	-node -e "console.log(require('./').getzonestate('$(shell zonename)'))"
 	echo ""
-	-node -e "console.log(require('./').getzoneid('$(shell zonename)'))"
+	-node -e "console.log(require('./').getzoneid())"
 
 check:: check-version
 

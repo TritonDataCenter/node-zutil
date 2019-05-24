@@ -39,7 +39,7 @@ napi_status _zu_napi_throw_error(napi_env env, const char* code, char *msg_forma
 
 napi_value zu_getzoneid(napi_env env, napi_callback_info info) {
     size_t argc = 0;
-    zone_id_t id;
+    zoneid_t id;
     napi_value js_id;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, NULL, NULL, NULL));
