@@ -11,6 +11,7 @@
 //
 
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
@@ -175,6 +176,179 @@ napi_value zu_getzonestate(napi_env env, napi_callback_info info) {
 }
 
 
+//
+// Getting zone attributes
+//
+//      zonecfg.zone_get_attr(zone_name, attr_name, function (err, attr) {});
+//      zonecfg.zone_get_attrs(zone_name, function (err, attrs) {});
+//
+// where each `attr` is an object with `name`, `type`, and `value` fields.
+//
+
+// From libzonecfg.h:
+//    struct zone_attrtab {
+//        char    zone_attr_name[MAXNAMELEN];
+//        char    zone_attr_type[MAXNAMELEN];
+//        char    zone_attr_value[2 * BUFSIZ];
+//    };
+typedef struct zone_attrtab zone_attrtab_t;
+
+
+
+typedef struct {
+    char zone_name[ZONENAME_MAX + 1];
+    zone_attrtab_t attr;
+    char errmsg[MAXERRMSGLEN + 1];
+    napi_ref callback;
+    napi_async_work work;
+} _zu_getzoneattr_data_t;
+
+// Fill in `data->attr` using `zonecfg_getattrent` et al.
+void _zu_getzoneattr_execute(napi_env env, void* data_) {
+    zone_attrtab_t attr;
+    _zu_getzoneattr_data_t* data = (_zu_getzoneattr_data_t*) data_;
+    zone_dochandle_t handle;
+    int rc;
+
+    if ((handle = zonecfg_init_handle()) == NULL) {
+        // Guessing ENOMEM is the issue here (cargoculting from node-zutil).
+        strlcat(data->errmsg, "zonecfg_init_handle error: ", MAXERRMSGLEN);
+        strlcat(data->errmsg, zonecfg_strerror(Z_NOMEM), MAXERRMSGLEN);
+        return;
+    }
+    if ((rc = zonecfg_get_handle(data->zone_name, handle)) != Z_OK) {
+        strlcat(data->errmsg, data->zone_name, MAXERRMSGLEN);
+        strlcat(data->errmsg, ": ", MAXERRMSGLEN);
+        strlcat(data->errmsg, zonecfg_strerror(rc), MAXERRMSGLEN);
+        goto fini;
+    }
+    if ((rc = zonecfg_setattrent(handle)) != Z_OK) {
+        strlcat(data->errmsg, "zonecfg_setattrent error: ", MAXERRMSGLEN);
+        strlcat(data->errmsg, zonecfg_strerror(rc), MAXERRMSGLEN);
+        goto fini;
+    }
+
+    while (zonecfg_getattrent(handle, &attr) == Z_OK) {
+        if (strncmp(data->attr.zone_attr_name, attr.zone_attr_name,
+                sizeof(data->attr.zone_attr_name)) == 0) {
+            strlcpy(data->attr.zone_attr_type, attr.zone_attr_type,
+                sizeof(data->attr.zone_attr_type));
+            strlcpy(data->attr.zone_attr_value, attr.zone_attr_value,
+                sizeof(data->attr.zone_attr_value));
+            break;
+        }
+    }
+    (void) zonecfg_endattrent(handle);
+
+fini:
+    zonecfg_fini_handle(handle);
+    return;
+}
+
+void _zu_getzoneattr_complete(napi_env env, napi_status status, void* data_) {
+    napi_value args[2];
+    napi_value attr;
+    napi_value callback;
+    _zu_getzoneattr_data_t* data = (_zu_getzoneattr_data_t*) data_;
+    napi_value errmsg;
+    napi_value global;
+    napi_value k;
+    napi_value result;
+    napi_value v;
+
+    if (status != napi_ok) {
+        napi_throw_error(env, NULL, "zone_get_attr execute failed");
+        return;
+    }
+
+    // Setup the args for the callback.
+    if (strnlen(data->errmsg, MAXERRMSGLEN) != 0) {
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, data->errmsg, NAPI_AUTO_LENGTH, 
+                &errmsg));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_error(env, NULL, errmsg, &args[0]));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_get_null(env, &args[1]));
+    } else if (strnlen(data->attr.zone_attr_type, MAXNAMELEN) == 0) {
+        NAPI_CALL_RETURN_VOID(env,
+            napi_get_null(env, &args[0]));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_get_null(env, &args[1]));
+    } else {
+        NAPI_CALL_RETURN_VOID(env,
+            napi_get_null(env, &args[0]));
+
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_object(env, &attr));
+        args[1] = attr;
+
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, "name", NAPI_AUTO_LENGTH, &k));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, data->attr.zone_attr_name,
+                NAPI_AUTO_LENGTH, &v));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_set_property(env, attr, k, v));
+
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, "type", NAPI_AUTO_LENGTH, &k));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, data->attr.zone_attr_type,
+                NAPI_AUTO_LENGTH, &v));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_set_property(env, attr, k, v));
+
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, "value", NAPI_AUTO_LENGTH, &k));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, data->attr.zone_attr_value,
+                NAPI_AUTO_LENGTH, &v));
+        NAPI_CALL_RETURN_VOID(env,
+            napi_set_property(env, attr, k, v));
+    }
+
+    // Call the caller's given callback.
+    NAPI_CALL_RETURN_VOID(env,
+        napi_get_reference_value(env, data->callback, &callback));
+    NAPI_CALL_RETURN_VOID(env, napi_get_global(env, &global));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_call_function(env, global, callback, 2, args, &result));
+
+    // Clean up.
+    NAPI_CALL_RETURN_VOID(env, napi_delete_reference(env, data->callback));
+    NAPI_CALL_RETURN_VOID(env, napi_delete_async_work(env, data->work));
+    free(data);
+}
+
+napi_value zu_getzoneattr(napi_env env, napi_callback_info info) {
+    size_t argc = 3;
+    napi_value argv[3];
+    size_t num_bytes;
+    napi_value resource_name;
+    _zu_getzoneattr_data_t *data = calloc(1, sizeof(_zu_getzoneattr_data_t));
+
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+    if (argc != 3) {
+        napi_throw_type_error(env, NULL, "incorrect number of arguments");
+        return NULL;
+    }
+    NAPI_CALL(env, napi_get_value_string_utf8(env, argv[0], data->zone_name,
+        ZONENAME_MAX+1, &num_bytes));
+    NAPI_CALL(env, napi_get_value_string_utf8(env, argv[1], data->attr.zone_attr_name,
+        sizeof(data->attr.zone_attr_name), &num_bytes));
+    NAPI_CALL(env, napi_create_reference(env, argv[2], 1, &(data->callback)));
+
+    NAPI_CALL(env, napi_create_string_utf8(
+                env, "NullResource", NAPI_AUTO_LENGTH, &resource_name));
+    NAPI_CALL(env, napi_create_async_work(env, NULL, resource_name,
+        _zu_getzoneattr_execute, _zu_getzoneattr_complete, data, &(data->work)));
+    NAPI_CALL(env, napi_queue_async_work(env, data->work));
+
+    return NULL;
+}
+
+
 static napi_value Init(napi_env env, napi_value exports) {
     // - https://nodejs.org/api/n-api.html#n_api_napi_property_descriptor
     //   for fields descriptions.
@@ -190,6 +364,7 @@ static napi_value Init(napi_env env, napi_value exports) {
 
         // libzonecfg.h
         { "getzonestate", NULL, zu_getzonestate, NULL, NULL, NULL, 0b010, NULL },
+        { "getzoneattr", NULL, zu_getzoneattr, NULL, NULL, NULL, 0b010, NULL },
     };
 
     NAPI_CALL(env, napi_define_properties(
