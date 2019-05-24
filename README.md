@@ -6,7 +6,7 @@ and *one* from
 
 "libzonecfg" is not documented in illumos and hence (IIUC) considered "unstable".
 That's a significant reason why bindings for more of its API is not provided
-here. See API-specific notes in the reference section below.
+here.
 
 Version 2 of this lib is a significant departure from earlier versions. See
 [the changelog entry](./CHANGES.md#v200).
@@ -14,24 +14,33 @@ Version 2 of this lib is a significant departure from earlier versions. See
 
 # Usage
 
-    var zutil = require('zutil');
-
-    // zone.h
-    // XXX
-    var myZone = zutil.getZone();
-    var someOtherZone = zutil.getZoneByName('foo');
-    var yetAnotherZone = zutil.getZoneById(20);
-
-    // libzonecfg.h
-    var state = zutil.getzonestate('foo'); // => "running"
+Assuming "5d4f7599-a991-6b35-dd44-d91936957a6b" is your current zone.
 
     > var zutil = require('zutil')
+
+From zone.h:
+
+    > zutil.getzoneid()             // get your current zones numeric ID
+    12
+
+    > zutil.getzonenamebyid(12)     // get the zonename from a zone ID
+    '5d4f7599-a991-6b35-dd44-d91936957a6b'
+
+    > zutil.getzoneidbyname('5d4f7599-a991-6b35-dd44-d91936957a6b')
+    12
+
+As a convenience, because working zone *name* is more common, this API
+is added by this module:
+
+    > zutil.getzonename()
+    '5d4f7599-a991-6b35-dd44-d91936957a6b'
+
+From libzonecfg.h:
 
     > zutil.getzonestate('5d4f7599-a991-6b35-dd44-d91936957a6b')
     'running'
 
 
-Assuming "5d4f7599-a991-6b35-dd44-d91936957a6b" is your current zone. If you are 
 
 # Install
 
@@ -40,25 +49,31 @@ Assuming "5d4f7599-a991-6b35-dd44-d91936957a6b" is your current zone. If you are
 
 # Reference
 
+## `getzoneid()
+
 ## `getzonestate(zonename)`
 
 Gets the zone state string (e.g. "running", "configured") for the given
-`zonename` string.  Throws an `Error` on any failure.
-
-Parameters:
-
-- `zonename` - String zone name. Typically on SmartOS this is 'global' or a
-  UUID.
+`zonename` string. Throws an `Error` on any failure. If you are in a non-global
+zone, you may only get a successful result for the current zone. Other zones
+will appear to not exist.
 
 At the time of writing the possible zone state strings in illumos are the
 [`ZONE_STATE_STR_...` vars defined
 here](https://github.com/joyent/illumos-joyent/blob/ab6a47af7ee9daefa937f7e8ca0531e68d003686/usr/src/lib/libzonecfg/common/zonecfg_impl.h#L48-L55)
 plus `"unknown"`.
 
-If you are in a non-global zone, you may only get a successful result for the
-current zone. Other zones will appear to not exist.
+As stated above, "libzonecfg" is undocumented. This function name is made up.
+It combines the C `zone_get_state` and `zone_state_str` functions.
 
-Examples:
+
+#### Parameters
+
+- `zonename` - String zone name. Typically on SmartOS this is 'global' or a
+  UUID.
+
+
+#### Examples
 
 ```
 > zutil.getzonestate('5d4f7599-a991-6b35-dd44-d91936957a6b')
