@@ -1,4 +1,8 @@
 //
+// Copyright 2019 Joyent, Inc.
+//
+
+//
 // Node.js C bindings for some of illumos' "zone.h" and "libzonecfg.h".
 //
 //
