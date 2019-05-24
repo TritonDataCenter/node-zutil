@@ -1,18 +1,29 @@
 {
   "name": "zutil",
-  "description": "A SunOS-specific wrapper over zone.h and libzonecfg.h APIs",
-  "version": "1.0.0",
+  "description": "A SunOS/illumos-specific binding to some zone.h and libzonecfg.h APIs",
+  "version": "2.0.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/joyent/node-zutil.git"
   },
-  "author": "Mark Cavage <mcavage@gmail.com> (http://www.joyent.com)",
+  "author": "Joyent (https://www.joyent.com)",
   "main": "lib/zutil.js",
-  "devDependencies": {
-    "nodeunit": ">=0.7",
-    "node-uuid": "1.3.3"
-  },
+  "keywords": [
+    "sunos",
+    "illumos",
+    "smartos",
+    "zone",
+    "zonecfg"
+  ],
+  "license": "MIT",
+  "files": [
+      "lib",
+      "src"
+  ],
   "engines": {
-    "node": ">=0.10"
+    "node": ">=6.x"
+  },
+  "devDependencies": {
+    "tap": "12.x"
   }
 }
