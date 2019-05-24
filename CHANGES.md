@@ -17,8 +17,11 @@
         - `getZoneAttribute`, `getZoneAttributes`: Not documented stable API
           (none of libzonecfg.h is). I ran into crashes implementing this
           with N-API and node v6. I suspect libzonecfg and its usage of
-          libxml2 is just not threadsafe. Also this isn't heavily used
-          by Triton/Manta. See workaround below.
+          libxml2 is just not threadsafe. Also this isn't heavily used by
+          Triton/Manta. See [the
+          PR](https://github.com/joyent/node-zutil/pull/8) and [the
+          branch](https://github.com/joyent/node-zutil/tree/getzoneattr) for
+          the crashing attempt.  See workaround in the migration table below.
     - Renames all the other APIs. The new names match the name of the C
       functions, where those exist.
 

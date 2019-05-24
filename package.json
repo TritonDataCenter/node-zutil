@@ -17,8 +17,8 @@
   ],
   "license": "MIT",
   "files": [
-      "lib",
-      "src"
+    "lib",
+    "src"
   ],
   "engines": {
     "node": ">=6.x"
