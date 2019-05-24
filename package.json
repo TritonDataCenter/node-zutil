@@ -16,6 +16,10 @@
     "zonecfg"
   ],
   "license": "MIT",
+  "files": [
+      "lib",
+      "src"
+  ],
   "engines": {
     "node": ">=6.x"
   },
