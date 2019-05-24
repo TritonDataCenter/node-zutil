@@ -20,14 +20,14 @@ Assuming "5d4f7599-a991-6b35-dd44-d91936957a6b" is your current zone.
 
 From zone.h:
 
-    > zutil.getzoneid()             // get your current zones numeric ID
-    12
+    > id =  zutil.getzoneid()               // get your current zone numeric ID
+    403
 
-    > zutil.getzonenamebyid(12)     // get the zonename from a zone ID
+    > zonename = zutil.getzonenamebyid(id)  // get the zonename from a zone ID
     '5d4f7599-a991-6b35-dd44-d91936957a6b'
 
-    > zutil.getzoneidbyname('5d4f7599-a991-6b35-dd44-d91936957a6b')
-    12
+    > zutil.getzoneidbyname(zonename)
+    403
 
 As a convenience, because working zone *name* is more common, this API
 is added by this module:
@@ -49,9 +49,58 @@ From libzonecfg.h:
 
 # Reference
 
-## `getzoneid()
+## `getzoneid()`
 
-## `getzonestate(zonename)`
+Gets the integer zone ID for the current process. In the global zone the id
+is zero (0).
+
+
+## `getzonenamebyid(<id>)`
+
+Gets the string zonename for the given zone id.
+
+#### Parameters
+
+- `id` - Integer zone id.
+
+#### Examples
+
+```
+> zutil.getzonenamebyid(403)
+'5d4f7599-a991-6b35-dd44-d91936957a6b'
+```
+
+
+## `getzoneidbyname(<zonename>)`
+
+Gets the integer zone id from the zonename.
+
+#### Parameters
+
+- `zonename` - String zone name. Typically on SmartOS this is 'global' or a
+  UUID.
+
+#### Examples
+
+```
+> zutil.getzoneidbyname('5d4f7599-a991-6b35-dd44-d91936957a6b')
+403
+```
+
+
+## `getzonename()`
+
+A convenience function that gets the current zonename.
+
+#### Examples
+
+```
+> zutil.getzonename()
+'5d4f7599-a991-6b35-dd44-d91936957a6b'
+```
+
+
+## `getzonestate(<zonename>)`
 
 Gets the zone state string (e.g. "running", "configured") for the given
 `zonename` string. Throws an `Error` on any failure. If you are in a non-global
@@ -79,7 +128,7 @@ It combines the C `zone_get_state` and `zone_state_str` functions.
 > zutil.getzonestate('5d4f7599-a991-6b35-dd44-d91936957a6b')
 'running'
 
-> zutil.getzonestate('global')
+> zutil.getzonestate('global')      # errors if no in the global zone
 Error: could not get zone "global" state: No such zone configured
     at Error (native)
     ...
