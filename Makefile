@@ -39,10 +39,18 @@ test: | $(TAP_EXEC)
 
 .PHONY: play
 play:
-	echo ""
-	-node -e "console.log(require('./').getzonestate('$(shell zonename)'))"
-	echo ""
-	-node -e "console.log(require('./').getzoneid())"
+	node -e " \
+		var zutil = require('./'); \
+		var id = zutil.getzoneid(); \
+		console.log('id:', id); \
+		var zonename = zutil.getzonenamebyid(id); \
+		console.log('zonename:', zonename); \
+		console.log('id from name:', zutil.getzoneidbyname(zonename)); \
+		console.log('current zonename:', zutil.getzonename()); \
+		\
+		var state = zutil.getzonestate(zonename); \
+		console.log('state: ' + state); \
+		"
 
 check:: check-version
 

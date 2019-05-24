@@ -18,5 +18,8 @@
   "license": "MIT",
   "engines": {
     "node": ">=6.x"
+  },
+  "devDependencies": {
+    "tap": "12.x"
   }
 }
