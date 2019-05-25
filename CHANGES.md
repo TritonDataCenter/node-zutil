@@ -4,6 +4,11 @@
 
 (nothing yet)
 
+## 2.0.1
+
+- Fix package.json to publish binding.gyp necessary to have the C bindings
+  actually build on `npm install`.
+
 ## 2.0.0
 
 - A re-write a this module to work with node v6 and later. This module is almost

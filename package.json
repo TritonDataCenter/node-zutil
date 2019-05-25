@@ -1,7 +1,7 @@
 {
   "name": "zutil",
   "description": "A SunOS/illumos-specific binding to some zone.h and libzonecfg.h APIs",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "repository": {
     "type": "git",
     "url": "git://github.com/joyent/node-zutil.git"
