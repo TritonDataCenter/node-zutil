@@ -32,15 +32,15 @@
 
 ### Migrating from zutil 0.x and 1.x to 2.x
 
-    | old API                                                      | new API |
-    | -------------------------------------------------------------| ------- |
-    | `getZone() -> {id: <id>, name: <zonename>}`                  | `getzoneid() -> <id>`, `getzonename() -> <zonename>` |
-    | `getZoneByName(zonename) -> {id: <id>, name: <zonename>}`    | `getzoneidbyname(zonename) -> <id>` |
-    | `getZoneById() -> {id: <id>, name: <zonename>}`              | `getzonenamebyid(id) -> <zonename>` |
-    | `getZoneState(zonename) -> '<state>'`                        | `getzonestate(<zonename>) -> '<state>'` |
-    | `listZones()`                                                | dropped, exec `zoneadm list -p` and parse |
-    | `getZoneAttribute(zonename, attrname, function (err, attr))` | dropped, exec `zonecfg -z <zonename> attr name=<attrname>` and parse |
-    | `getZoneAttributes(zonename, function (err, attrs))`         | dropped, exec `zonecfg -z <zonename> attr` and parse |
+| old API                                                      | new API |
+| -------------------------------------------------------------| ------- |
+| `getZone() -> {id: <id>, name: <zonename>}`                  | `getzoneid() -> <id>`, `getzonename() -> <zonename>` |
+| `getZoneByName(zonename) -> {id: <id>, name: <zonename>}`    | `getzoneidbyname(zonename) -> <id>` |
+| `getZoneById() -> {id: <id>, name: <zonename>}`              | `getzonenamebyid(id) -> <zonename>` |
+| `getZoneState(zonename) -> '<state>'`                        | `getzonestate(<zonename>) -> '<state>'` |
+| `listZones()`                                                | dropped, exec `zoneadm list -p` and parse |
+| `getZoneAttribute(zonename, attrname, function (err, attr))` | dropped, exec `zonecfg -z <zonename> attr name=<attrname>`, see `getZoneAttr` below |
+| `getZoneAttributes(zonename, function (err, attrs))`         | dropped, exec `zonecfg -z <zonename> attr` and parse |
 
 ### Replacement `getZoneAttribute` JS code
 
@@ -49,6 +49,21 @@ var assert = require('assert-plus');
 var forkExecWait = require('forkexec').forkExecWait;
 var VError = require('verror');
 
+/*
+ * Get a zonecfg attribute.
+ *
+ * This calls back with `function (err, attr)` with one of the following:
+ * - `function(<error>, undefined)` if there was some error. For example it
+ *   is an error if the given `zonename` is not a configured zone.
+ * - `function(null, null)` if the zonename exists, but it has no such attr.
+ * - `function(null, <attr>)` where attr is an object of the form:
+ *
+ *          {
+ *              name: "<the given attrname>",
+ *              type: "<an attribute type, e.g. 'string'>",
+ *              value: "<the attribute value>"
+ *          }
+ */
 function getZoneAttr(zonename, attrname, cb) {
     // Attr output from `zonecfg -z ZONE info attr name=NAME` looks like:
     //     "attr:\n\tname: <name>\n\ttype: <type>\n\tvalue: <value>\n"
@@ -59,6 +74,8 @@ function getZoneAttr(zonename, attrname, cb) {
     forkExecWait({argv: argv, includeStderr: true}, function (err, info) {
         if (err) {
             cb(err);
+        } else if (info.stdout === 'No such attr resource.\n') {
+            cb(null, null);
         } else {
             var parsed = attrRe.exec(info.stdout);
             if (!parsed) {
@@ -74,7 +91,8 @@ function getZoneAttr(zonename, attrname, cb) {
 }
 
 var zonename = '5d4f7599-a991-6b35-dd44-d91936957a6b';
-getZoneAttr(zonename, 'owner-uuid', function (err, attr) {
+var attrname = 'owner-uuid';
+getZoneAttr(zonename, attrname, function (err, attr) {
     console.log('err:', err)
     console.log('attr:', attr)
 });
