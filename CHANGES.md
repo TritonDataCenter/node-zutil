@@ -30,7 +30,7 @@
     - Renames all the other APIs. The new names match the name of the C
       functions, where those exist.
 
-  Migrating from zutil 0.x and 1.x to 2.x:
+### Migrating from zutil 0.x and 1.x to 2.x
 
     | old API                                                      | new API |
     | -------------------------------------------------------------| ------- |
@@ -41,6 +41,45 @@
     | `listZones()`                                                | dropped, exec `zoneadm list -p` and parse |
     | `getZoneAttribute(zonename, attrname, function (err, attr))` | dropped, exec `zonecfg -z <zonename> attr name=<attrname>` and parse |
     | `getZoneAttributes(zonename, function (err, attrs))`         | dropped, exec `zonecfg -z <zonename> attr` and parse |
+
+### Replacement `getZoneAttribute` JS code
+
+```javascript
+var assert = require('assert-plus');
+var forkExecWait = require('forkexec').forkExecWait;
+var VError = require('verror');
+
+function getZoneAttr(zonename, attrname, cb) {
+    // Attr output from `zonecfg -z ZONE info attr name=NAME` looks like:
+    //     "attr:\n\tname: <name>\n\ttype: <type>\n\tvalue: <value>\n"
+    var attrRe = /^attr:\n\tname: (.*?)\n\ttype: (.*?)\n\tvalue: (.*?)\n$/m;
+
+    var argv = ['/usr/sbin/zonecfg', '-z', zonename, 'info',
+        'attr', 'name=' + attrname];
+    forkExecWait({argv: argv, includeStderr: true}, function (err, info) {
+        if (err) {
+            cb(err);
+        } else {
+            var parsed = attrRe.exec(info.stdout);
+            if (!parsed) {
+                cb(new VError('unexpected zonecfg attr output: %j',
+                    info.stdout));
+            } else {
+                assert.equal(parsed[1], attrname);
+                attr = {name: parsed[1], type: parsed[2], value: parsed[3]};
+                cb(null, attr);
+            }
+        }
+    });
+}
+
+var zonename = '5d4f7599-a991-6b35-dd44-d91936957a6b';
+getZoneAttr(zonename, 'owner-uuid', function (err, attr) {
+    console.log('err:', err)
+    console.log('attr:', attr)
+});
+```
+
 
 ## 1.0.0
 
